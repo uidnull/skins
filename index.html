@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS2 Skins Market</title>
+
+<style>
+
+body{
+background:#0f1115;
+color:white;
+font-family:Arial;
+margin:0;
+padding:40px;
+}
+
+header{
+display:flex;
+justify-content:space-between;
+margin-bottom:30px;
+}
+
+h1{
+color:#5cc8ff;
+}
+
+#search{
+padding:10px;
+border-radius:8px;
+border:none;
+background:#1c2027;
+color:white;
+width:250px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+gap:20px;
+}
+
+.card{
+background:#1c2027;
+padding:15px;
+border-radius:10px;
+transition:.2s;
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+.card img{
+width:100%;
+height:120px;
+object-fit:contain;
+}
+
+.name{
+margin-top:10px;
+font-size:14px;
+}
+
+.price{
+color:#4ade80;
+margin:6px 0;
+}
+
+button{
+padding:8px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.inspect{
+background:#3b82f6;
+color:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>CS2 Skins</h1>
+<input id="search" placeholder="Buscar skin">
+</header>
+
+<div class="grid" id="skins"></div>
+
+<script>
+
+let skinsData=[]
+let prices={}
+
+async function loadData(){
+
+// base de skins
+const skins=await fetch("https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json")
+skinsData=await skins.json()
+
+// precios
+const priceRes=await fetch("https://api.priceforge.dev/latest/prices")
+prices=await priceRes.json()
+
+render(skinsData.slice(0,200)) // limit para rendimiento
+
+}
+
+function render(list){
+
+const container=document.getElementById("skins")
+container.innerHTML=""
+
+list.forEach(skin=>{
+
+const price=prices[skin.market_hash_name]?.price || "?"
+
+const card=document.createElement("div")
+card.className="card"
+
+card.innerHTML=`
+
+<img src="${skin.image}">
+
+<div class="name">${skin.name}</div>
+
+<div class="price">$${price}</div>
+
+<button class="inspect" onclick="inspect('${skin.inspect_link || ""}')">
+Inspect
+</button>
+
+`
+
+container.appendChild(card)
+
+})
+
+}
+
+document.getElementById("search").addEventListener("input",e=>{
+
+const term=e.target.value.toLowerCase()
+
+const filtered=skinsData.filter(s=>
+s.name.toLowerCase().includes(term)
+)
+
+render(filtered.slice(0,200))
+
+})
+
+function inspect(link){
+if(!link) return alert("No inspect link")
+window.location.href=link
+}
+
+loadData()
+
+</script>
+
+</body>
+</html>
