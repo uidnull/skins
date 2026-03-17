@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CS2 Skins Market</title>
+<title>CS2 Skins</title>
 
 <style>
 
@@ -12,25 +12,45 @@ background:#0f1115;
 color:white;
 font-family:Arial;
 margin:0;
-padding:40px;
 }
 
 header{
+background:#1c2027;
+padding:15px 30px;
 display:flex;
-justify-content:space-between;
-margin-bottom:30px;
+align-items:center;
+gap:20px;
 }
 
-h1{
+.logo{
+font-size:20px;
 color:#5cc8ff;
+}
+
+nav button{
+background:none;
+border:none;
+color:#ccc;
+margin-right:15px;
+cursor:pointer;
+font-size:14px;
+}
+
+nav button:hover{
+color:white;
+}
+
+.container{
+padding:30px;
 }
 
 #search{
 padding:10px;
-border-radius:8px;
+border-radius:6px;
 border:none;
 background:#1c2027;
 color:white;
+margin-bottom:20px;
 width:250px;
 }
 
@@ -67,16 +87,13 @@ color:#4ade80;
 margin:6px 0;
 }
 
-button{
-padding:8px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
-.inspect{
+button.inspect{
 background:#3b82f6;
+border:none;
+padding:8px;
+border-radius:6px;
 color:white;
+cursor:pointer;
 }
 
 </style>
@@ -85,39 +102,51 @@ color:white;
 <body>
 
 <header>
-<h1>CS2 Skins</h1>
-<input id="search" placeholder="Buscar skin">
+
+<div class="logo">CS2 Skins</div>
+
+<nav>
+<button onclick="filterCategory('Pistols')">Pistols</button>
+<button onclick="filterCategory('Rifles')">Rifles</button>
+<button onclick="filterCategory('SMGs')">SMGs</button>
+<button onclick="filterCategory('Shotguns')">Shotguns</button>
+<button onclick="filterCategory('Knives')">Knives</button>
+<button onclick="filterCategory('Gloves')">Gloves</button>
+<button onclick="filterCategory('All')">All</button>
+</nav>
+
 </header>
+
+<div class="container">
+
+<input id="search" placeholder="Buscar skin...">
 
 <div class="grid" id="skins"></div>
 
+</div>
+
 <script>
 
-let skinsData=[]
-let prices={}
+let skins=[]
+let filtered=[]
 
-async function loadData(){
+async function loadSkins(){
 
-// base de skins
-const skins=await fetch("https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json")
-skinsData=await skins.json()
+const res = await fetch("https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json")
+skins = await res.json()
 
-// precios
-const priceRes=await fetch("https://api.priceforge.dev/latest/prices")
-prices=await priceRes.json()
+filtered = skins.slice(0,300)
 
-render(skinsData.slice(0,200)) // limit para rendimiento
+render()
 
 }
 
-function render(list){
+function render(){
 
 const container=document.getElementById("skins")
 container.innerHTML=""
 
-list.forEach(skin=>{
-
-const price=prices[skin.market_hash_name]?.price || "?"
+filtered.forEach(skin=>{
 
 const card=document.createElement("div")
 card.className="card"
@@ -128,9 +157,9 @@ card.innerHTML=`
 
 <div class="name">${skin.name}</div>
 
-<div class="price">$${price}</div>
+<div class="price">Steam Market</div>
 
-<button class="inspect" onclick="inspect('${skin.inspect_link || ""}')">
+<button class="inspect" onclick="inspect()">
 Inspect
 </button>
 
@@ -142,24 +171,40 @@ container.appendChild(card)
 
 }
 
+function filterCategory(cat){
+
+if(cat==="All"){
+filtered=skins.slice(0,300)
+}else{
+
+filtered=skins.filter(s=>{
+if(!s.category) return false
+return s.category.name.includes(cat)
+}).slice(0,300)
+
+}
+
+render()
+
+}
+
 document.getElementById("search").addEventListener("input",e=>{
 
 const term=e.target.value.toLowerCase()
 
-const filtered=skinsData.filter(s=>
+filtered=skins.filter(s=>
 s.name.toLowerCase().includes(term)
-)
+).slice(0,300)
 
-render(filtered.slice(0,200))
+render()
 
 })
 
-function inspect(link){
-if(!link) return alert("No inspect link")
-window.location.href=link
+function inspect(){
+alert("Para inspect real necesitas un inspect link de inventario")
 }
 
-loadData()
+loadSkins()
 
 </script>
 
